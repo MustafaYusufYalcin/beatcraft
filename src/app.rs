@@ -62,7 +62,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(cc: &eframe::CreationContext, screenshot: Option<PathBuf>) -> Self {
+    pub fn new(cc: &eframe::CreationContext, screenshot: Option<PathBuf>, open: Option<PathBuf>) -> Self {
         setup_style(&cc.egui_ctx);
         let project = Project::demo();
         let shared = std::sync::Arc::new(std::sync::Mutex::new(engine::Shared::new(project.clone())));
@@ -105,6 +105,9 @@ impl App {
             first_frame: true,
             screenshot,
         };
+        if let Some(path) = &open {
+            app.load(path);
+        }
         if app.screenshot.is_some() {
             // show something alive in the check picture
             app.playing = true;
@@ -159,6 +162,7 @@ impl App {
     }
 
     pub fn toggle_play(&mut self) {
+        self._audio.resume();
         self.playing = !self.playing;
         if let Ok(mut s) = self.shared.lock() {
             s.playing = self.playing;

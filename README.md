@@ -11,6 +11,12 @@
 </p>
 
 <p align="center">
+  <b>Tell your AI assistant "make me a 140 BPM trap beat", and it builds it in BeatCraft.</b><br>
+  <a href="https://mustafayusufyalcin.github.io/beatcraft/">Try it in your browser</a> ·
+  runs natively on macOS, Windows and Linux
+</p>
+
+<p align="center">
   By Mustafa Yusuf Yalçın and &lt;ARKADAŞ ADI SOYADI&gt; · a community app in the Craft ecosystem
 </p>
 
@@ -23,9 +29,15 @@
   <a href="#getting-started">Getting started</a> ·
   <a href="#agents-cli-and-mcp">Agents, CLI and MCP</a> ·
   <a href="#roadmap">Roadmap</a> ·
+  <a href="#contributing">Contributing</a> ·
   <a href="#downloads">Downloads</a> ·
   <a href="#license">License</a>
 </p>
+
+![A trap beat being built step by step through beatcraft-cli: drums, hats, 808 bass, pad](docs/demo.gif)
+
+<sub>The beat above was built only with commands, the same ones an AI agent sends over MCP:
+[examples/trap-beat.sh](examples/trap-beat.sh).</sub>
 
 ![BeatCraft playing its demo song: channel rack, piano roll, playlist and mixer](docs/screenshot.png)
 
@@ -44,6 +56,7 @@ BeatCraft is **early alpha**. Today it can:
   pad, pluck, e-keys), all synthesised; play the selected channel from the computer keyboard.
 - **Save and share:** projects as `.beatcraft.json`, the song rendered to a 44.1 kHz WAV file.
 - **Automate:** 19 commands from the CLI and an MCP server.
+- **Run anywhere:** native on macOS, Windows and Linux, and in the browser (WebAssembly).
 
 Not yet: audio recording, sample loading, automation clips, undo, MIDI input, plugins.
 
@@ -55,7 +68,7 @@ cd beatcraft
 cargo run --release --bin BeatCraft
 ```
 
-Needs a recent stable Rust. On Linux install the ALSA and windowing headers first
+Open a saved project directly with `BeatCraft my-beat.beatcraft.json`. Needs a recent stable Rust. On Linux install the ALSA and windowing headers first
 (Debian/Ubuntu: `sudo apt install libasound2-dev libx11-dev libxcursor-dev libxrandr-dev libxi-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev`).
 
 | Key | Does |
@@ -66,6 +79,10 @@ Needs a recent stable Rust. On Linux install the ALSA and windowing headers firs
 | Z S X D C … / Q 2 W 3 E … | Play the selected channel |
 | − / = | Keyboard octave |
 | Ctrl/Cmd + S | Save |
+
+**In the browser:** `rustup target add wasm32-unknown-unknown`, install [trunk](https://trunkrs.dev),
+then `trunk serve --release` and open http://127.0.0.1:8080. Click the page once to let the browser
+start sound. The web build cannot save projects to disk yet.
 
 ## Agents, CLI and MCP
 
@@ -81,14 +98,21 @@ beatcraft-cli render beat.json beat.wav
 
 `beatcraft-cli mcp` is a Model Context Protocol server on stdio with the tools `list_commands`,
 `execute`, `batch`, `inspect_project`, `open_project`, `save_project` and `export_wav`.
-Claude Code: `claude mcp add beatcraft -- beatcraft-cli mcp`.
+Claude Code: `claude mcp add beatcraft -- beatcraft-cli mcp`, then ask for a beat.
+[examples/trap-beat.sh](examples/trap-beat.sh) shows a whole beat built from these commands.
 
 ## Roadmap
 
 1. Route every button in the app through the command layer, plus a JSON control channel to drive the running window.
 2. Sample channels (WAV/FLAC/MP3), undo, automation clips.
 3. MIDI input, audio recording, CLAP plugins.
-4. A browser build (WebAssembly).
+4. Saving and loading projects in the browser build.
+
+## Contributing
+
+Pull requests are welcome, and you don't need to know audio programming to help: new instruments,
+effects, themes, translations and docs are all open. Start with an issue labelled
+**good first issue** and read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Downloads
 

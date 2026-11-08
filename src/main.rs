@@ -14,13 +14,16 @@ mod rack;
 mod synth;
 mod widgets;
 
+#[cfg(not(target_arch = "wasm32"))]
 use std::path::PathBuf;
 
+#[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
     let args: Vec<String> = std::env::args().collect();
     let mut screenshot: Option<PathBuf> = None;
     let mut export: Option<PathBuf> = None;
     let mut icon_out: Option<(PathBuf, u32)> = None;
+    let mut open: Option<PathBuf> = None;
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
@@ -37,6 +40,11 @@ fn main() -> eframe::Result<()> {
                 icon_out = Some((PathBuf::from(&args[i + 1]), size));
                 i += 2;
             }
+            "--open" if i + 1 < args.len() => {
+                open = Some(PathBuf::from(&args[i + 1]));
+                i += 1;
+            }
+            a if a.ends_with(".json") && !a.starts_with("--") => open = Some(PathBuf::from(a)),
             "--version" => {
                 println!("BeatCraft {}", env!("CARGO_PKG_VERSION"));
                 return Ok(());
@@ -63,5 +71,25 @@ fn main() -> eframe::Result<()> {
         viewport: egui::ViewportBuilder::default().with_inner_size([1600.0, 960.0]).with_min_inner_size([1100.0, 700.0]).with_title("BeatCraft").with_app_id("beatcraft").with_icon(std::sync::Arc::new(icon::icon_data())),
         ..Default::default()
     };
-    eframe::run_native("BeatCraft", options, Box::new(move |cc| Ok(Box::new(app::App::new(cc, screenshot)))))
+    eframe::run_native("BeatCraft", options, Box::new(move |cc| Ok(Box::new(app::App::new(cc, screenshot, open)))))
+}
+
+/// Web build: started by trunk from index.html (canvas id "beatcraft").
+#[cfg(target_arch = "wasm32")]
+fn main() {
+    use eframe::wasm_bindgen::JsCast;
+    let options = eframe::WebOptions::default();
+    wasm_bindgen_futures::spawn_local(async {
+        let canvas = web_sys::window()
+            .and_then(|w| w.document())
+            .and_then(|d| d.get_element_by_id("beatcraft"))
+            .and_then(|e| e.dyn_into::<web_sys::HtmlCanvasElement>().ok())
+            .expect("canvas #beatcraft missing");
+        let _ = eframe::WebRunner::new()
+            .start(canvas, options, Box::new(|cc| Ok(Box::new(app::App::new(cc, None, None)))))
+            .await;
+        if let Some(l) = web_sys::window().and_then(|w| w.document()).and_then(|d| d.get_element_by_id("loading")) {
+            l.remove();
+        }
+    });
 }

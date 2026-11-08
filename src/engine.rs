@@ -174,7 +174,7 @@ impl Engine {
 
     /// Render interleaved stereo (or n-channel) output.
     pub fn render(&mut self, s: &mut Shared, out: &mut [f32], out_ch: usize) {
-        let t_start = std::time::Instant::now();
+        let t_start = web_time::Instant::now();
         let frames = out.len() / out_ch;
         // commands
         for cmd in std::mem::take(&mut s.cmds) {
@@ -351,6 +351,17 @@ pub struct AudioOut {
     _stream: Option<cpal::Stream>,
 }
 
+impl AudioOut {
+    /// Start (or restart) the output. Browsers keep audio suspended until the page is clicked,
+    /// so the app calls this again when playback starts.
+    pub fn resume(&self) {
+        use cpal::traits::StreamTrait;
+        if let Some(s) = &self._stream {
+            let _ = s.play();
+        }
+    }
+}
+
 pub fn start_audio(shared: SharedRef, want_device: bool) -> AudioOut {
     use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
     if want_device {
@@ -390,6 +401,7 @@ pub fn start_audio(shared: SharedRef, want_device: bool) -> AudioOut {
         }
     }
     // No device: keep the engine running in real time so the app still works (silently).
+    #[cfg(not(target_arch = "wasm32"))]
     std::thread::spawn(move || {
         let sr = SAMPLE_RATE as f32;
         let mut engine = Engine::new(sr);
