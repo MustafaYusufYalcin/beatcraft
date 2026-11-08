@@ -1,0 +1,11 @@
+BeatCraft
+Copyright (c) 2026 Mustafa Yusuf Yalçın, <ARKADAŞ ADI SOYADI> and the BeatCraft contributors
+
+BeatCraft is dual-licensed under the MIT License (LICENSE-MIT) or the Apache License,
+Version 2.0 (LICENSE-APACHE), at your option.
+
+BeatCraft is an independent community project. It is not made, endorsed or maintained
+by ArtCraft, and it is not affiliated with any other music software or its publisher.
+All product names mentioned belong to their owners.
+
+Third-party Rust crates used at build time keep their own licenses; see ATTRIBUTION.md.
