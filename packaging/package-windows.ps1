@@ -21,5 +21,6 @@ $zip = "$out.zip"
 if (Test-Path $zip) { Remove-Item -Force $zip }
 Compress-Archive -Path "$out\*" -DestinationPath $zip
 $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
-"$hash  $(Split-Path $zip -Leaf)" | Out-File -Encoding ascii "dist\SHA256SUMS-windows.txt"
+# LF line ending, like sha256sum, so the merged SHA256SUMS.txt verifies everywhere.
+[System.IO.File]::WriteAllText("$PWD\dist\SHA256SUMS-windows.txt", "$hash  $(Split-Path $zip -Leaf)`n")
 Write-Host "Done: $zip"

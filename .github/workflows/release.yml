@@ -80,7 +80,7 @@ jobs:
         with:
           path: all
           merge-multiple: true
-      - run: cat all/SHA256SUMS-*.txt | sort -k2 > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - run: cat all/SHA256SUMS-*.txt | tr -d '\r' | sort -k2 > SHA256SUMS.txt && cat SHA256SUMS.txt
       - uses: softprops/action-gh-release@v2
         with:
           files: SHA256SUMS.txt
