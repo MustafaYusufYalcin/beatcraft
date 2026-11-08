@@ -7,6 +7,11 @@ license = "MIT OR Apache-2.0"
 authors = ["Mustafa Yusuf Yalçın", "<ARKADAŞ ADI SOYADI>"]
 repository = "https://github.com/MustafaYusufYalcin/beatcraft"
 build = "build.rs"
+homepage = "https://mustafayusufyalcin.github.io/beatcraft/"
+readme = "README.md"
+keywords = ["music", "audio", "sequencer", "mcp", "beat"]
+categories = ["multimedia::audio", "command-line-utilities"]
+exclude = ["docs/", ".github/", "index.html", "examples/"]
 
 [[bin]]
 name = "BeatCraft"
