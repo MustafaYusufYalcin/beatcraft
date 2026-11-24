@@ -3,8 +3,9 @@ name: Web build
 
 on:
   workflow_dispatch:
+  # The github-pages environment only lets the default branch deploy, so this follows main, not tags.
   push:
-    tags: ["v*"]
+    branches: [main]
 
 permissions:
   contents: read

@@ -49,8 +49,9 @@ and can also be started by hand from the Actions tab.
 
 - Builds the browser version with trunk 0.22.1 (`trunk build --release`) into `dist-web` and
   publishes it to GitHub Pages under `/<repository name>/`.
-- It is **skipped while the repository is private**, because Pages needs a public repository on
-  the free plan. Once the repository is public and Pages is enabled it runs on tags too.
+- It runs on every push to `main` and by hand from the Actions tab, not on tags: the
+  `github-pages` environment only lets the default branch deploy. It is skipped while a
+  repository is private, because Pages needs a public repository on the free plan.
 
 **CI** (`ci.yml`) is separate: it checks pushes to `main` and pull requests but builds no packages.
 See [Testing](Testing).
