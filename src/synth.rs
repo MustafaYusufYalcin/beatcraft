@@ -70,8 +70,8 @@ pub struct Voice {
     params: SynthParams,
     vel: f32,
     hz: f32,
-    t: f32,         // seconds since start
-    gate_len: f32,  // seconds until release (f32::MAX for held live notes)
+    t: f32,        // seconds since start
+    gate_len: f32, // seconds until release (f32::MAX for held live notes)
     released_at: Option<f32>,
     rel_level: f32,
     phases: [f32; 3],

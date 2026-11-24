@@ -122,10 +122,7 @@ impl InstKind {
         }
     }
     pub fn is_drum(self) -> bool {
-        matches!(
-            self,
-            InstKind::Kick | InstKind::Snare | InstKind::Clap | InstKind::HiHat | InstKind::OpenHat | InstKind::Tom
-        )
+        matches!(self, InstKind::Kick | InstKind::Snare | InstKind::Clap | InstKind::HiHat | InstKind::OpenHat | InstKind::Tom)
     }
     pub fn default_params(self) -> SynthParams {
         let mut p = SynthParams::default();
@@ -258,14 +255,8 @@ pub struct Pattern {
 
 impl Pattern {
     pub fn new(index: usize, channels: usize) -> Self {
-        let hues: [[u8; 3]; 6] =
-            [[96, 150, 200], [120, 186, 106], [200, 128, 96], [176, 112, 196], [200, 170, 80], [90, 180, 180]];
-        let mut p = Self {
-            name: format!("Pattern {}", index + 1),
-            steps: DEFAULT_PATTERN_STEPS,
-            color: hues[index % hues.len()],
-            data: Vec::new(),
-        };
+        let hues: [[u8; 3]; 6] = [[96, 150, 200], [120, 186, 106], [200, 128, 96], [176, 112, 196], [200, 170, 80], [90, 180, 180]];
+        let mut p = Self { name: format!("Pattern {}", index + 1), steps: DEFAULT_PATTERN_STEPS, color: hues[index % hues.len()], data: Vec::new() };
         p.ensure_channels(channels);
         p
     }
@@ -348,17 +339,7 @@ impl Insert {
         if index == 0 {
             slots[0] = Some(FxKind::Limiter);
         }
-        Self {
-            name,
-            volume: FADER_UNITY,
-            pan: 0.0,
-            mute: false,
-            solo: false,
-            lowpass: 1.0,
-            delay: 0.0,
-            reverb: 0.0,
-            slots,
-        }
+        Self { name, volume: FADER_UNITY, pan: 0.0, mute: false, solo: false, lowpass: 1.0, delay: 0.0, reverb: 0.0, slots }
     }
 }
 
@@ -518,10 +499,8 @@ impl Project {
             d.name = "Melody".into();
             d.steps = 32;
             d.ensure_channels(p.channels.len());
-            let mel: [(u32, u8, u32); 12] = [
-                (0, 76, 2), (3, 79, 1), (4, 76, 2), (6, 74, 2), (8, 72, 3), (11, 74, 1),
-                (12, 76, 4), (16, 72, 2), (19, 74, 1), (20, 72, 2), (22, 71, 2), (24, 69, 6),
-            ];
+            let mel: [(u32, u8, u32); 12] =
+                [(0, 76, 2), (3, 79, 1), (4, 76, 2), (6, 74, 2), (8, 72, 3), (11, 74, 1), (12, 76, 4), (16, 72, 2), (19, 74, 1), (20, 72, 2), (22, 71, 2), (24, 69, 6)];
             for (s, k, l) in mel {
                 d.data[lead].notes.push(Note { key: k, start: s * STEP_TICKS, len: l * STEP_TICKS, vel: 0.85 });
             }

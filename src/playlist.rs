@@ -26,7 +26,17 @@ impl App {
             tb.label(RichText::new("Zoom").size(11.0).color(col::DIM));
             tb.add(egui::Slider::new(&mut self.bar_px, 24.0..=160.0).show_value(false));
             tb.add_space(12.0);
-            tb.label(RichText::new(format!("{} clips · {} bars · tracks 1–{} of {}", self.project.clips.len(), self.project.song_length_ticks() / (STEPS_PER_BAR * STEP_TICKS), SHOWN_TRACKS, PLAYLIST_TRACKS)).size(11.0).color(col::DIM));
+            tb.label(
+                RichText::new(format!(
+                    "{} clips · {} bars · tracks 1–{} of {}",
+                    self.project.clips.len(),
+                    self.project.song_length_ticks() / (STEPS_PER_BAR * STEP_TICKS),
+                    SHOWN_TRACKS,
+                    PLAYLIST_TRACKS
+                ))
+                .size(11.0)
+                .color(col::DIM),
+            );
 
             let bar_ticks = (STEPS_PER_BAR * STEP_TICKS) as f32;
             let tick_px = self.bar_px / bar_ticks;
@@ -70,7 +80,12 @@ impl App {
                     p.text(hr.left_center() + vec2(10.0, 0.0), Align2::LEFT_CENTER, &self.project.track_names[t], FontId::proportional(12.0), col::TEXT);
                 }
                 // clips
-                let clip_rect = |c: &Clip| Rect::from_min_size(pos2(grid.left() + c.start as f32 * tick_px, grid.top() + c.track as f32 * TRACK_H + 1.0), vec2(c.len as f32 * tick_px - 1.0, TRACK_H - 3.0));
+                let clip_rect = |c: &Clip| {
+                    Rect::from_min_size(
+                        pos2(grid.left() + c.start as f32 * tick_px, grid.top() + c.track as f32 * TRACK_H + 1.0),
+                        vec2(c.len as f32 * tick_px - 1.0, TRACK_H - 3.0),
+                    )
+                };
                 for (i, c) in self.project.clips.iter().enumerate() {
                     if c.track >= SHOWN_TRACKS {
                         continue;
@@ -103,7 +118,11 @@ impl App {
                                     }
                                     let x = r.left() + t as f32 * tick_px;
                                     let y = body.top() + chi as f32 / nch * body.height();
-                                    clip_p.rect_filled(Rect::from_min_size(pos2(x + 1.0, y), vec2((STEP_TICKS as f32 * tick_px - 1.0).max(1.0), (body.height() / nch - 1.0).max(1.0))), 0.0, Color32::from_white_alpha(130));
+                                    clip_p.rect_filled(
+                                        Rect::from_min_size(pos2(x + 1.0, y), vec2((STEP_TICKS as f32 * tick_px - 1.0).max(1.0), (body.height() / nch - 1.0).max(1.0))),
+                                        0.0,
+                                        Color32::from_white_alpha(130),
+                                    );
                                 }
                             }
                             for n in &d.notes {
@@ -157,7 +176,8 @@ impl App {
                                 Some((i, edge)) => {
                                     if start_drag {
                                         let c = self.project.clips[i];
-                                        self.clip_drag = Some(if edge { ClipDrag::Resize { idx: i } } else { ClipDrag::Move { idx: i, grab_ticks: to_tick(pos.x) as i64 - c.start as i64 } });
+                                        self.clip_drag =
+                                            Some(if edge { ClipDrag::Resize { idx: i } } else { ClipDrag::Move { idx: i, grab_ticks: to_tick(pos.x) as i64 - c.start as i64 } });
                                     } else {
                                         // clicking a clip selects its pattern
                                         self.current_pattern = self.project.clips[i].pattern;

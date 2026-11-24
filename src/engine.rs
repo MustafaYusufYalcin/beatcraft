@@ -52,11 +52,7 @@ impl Shared {
         if self.song_mode {
             self.project.song_length_ticks()
         } else {
-            self.project
-                .patterns
-                .get(self.current_pattern)
-                .map(|p| p.length_ticks())
-                .unwrap_or(STEPS_PER_BAR * STEP_TICKS)
+            self.project.patterns.get(self.current_pattern).map(|p| p.length_ticks()).unwrap_or(STEPS_PER_BAR * STEP_TICKS)
         }
     }
 }
@@ -337,11 +333,7 @@ impl Engine {
 /// An effect only works while its slot is loaded on the insert.
 pub fn effective_fx(ins: &Insert) -> (f32, f32, f32) {
     let has = |k: FxKind| ins.slots.iter().any(|x| *x == Some(k));
-    (
-        if has(FxKind::Filter) { ins.lowpass } else { 1.0 },
-        if has(FxKind::Delay) { ins.delay } else { 0.0 },
-        if has(FxKind::Reverb) { ins.reverb } else { 0.0 },
-    )
+    (if has(FxKind::Filter) { ins.lowpass } else { 1.0 }, if has(FxKind::Delay) { ins.delay } else { 0.0 }, if has(FxKind::Reverb) { ins.reverb } else { 0.0 })
 }
 
 pub type SharedRef = Arc<Mutex<Shared>>;

@@ -48,7 +48,13 @@ impl App {
             ui.label(RichText::new("Click steps to toggle · right click clears · scroll a step for velocity").size(10.0).color(col::DIM));
         });
         ui.add_space(2.0);
-        let step_w = if steps > 32 { 11.0 } else if steps > 16 { 15.0 } else { 22.0 };
+        let step_w = if steps > 32 {
+            11.0
+        } else if steps > 16 {
+            15.0
+        } else {
+            22.0
+        };
         let mut remove: Option<usize> = None;
         let mut preview: Option<usize> = None;
         let mut grid_w = 0.0;
@@ -73,7 +79,13 @@ impl App {
                     // mixer route
                     let (r, resp) = ui.allocate_exact_size(vec2(24.0, 18.0), Sense::click_and_drag());
                     ui.painter().rect_filled(r, 2.0, col::LCD);
-                    ui.painter().text(r.center(), Align2::CENTER_CENTER, if ch.insert == 0 { "M".to_string() } else { ch.insert.to_string() }, FontId::monospace(11.0), col::LCD_TEXT);
+                    ui.painter().text(
+                        r.center(),
+                        Align2::CENTER_CENTER,
+                        if ch.insert == 0 { "M".to_string() } else { ch.insert.to_string() },
+                        FontId::monospace(11.0),
+                        col::LCD_TEXT,
+                    );
                     if resp.dragged() {
                         let d = (-resp.drag_delta().y / 4.0).round() as i32;
                         ch.insert = (ch.insert as i32 + d).clamp(0, MIXER_INSERTS as i32) as usize;
@@ -87,7 +99,17 @@ impl App {
                     // name
                     let (r, resp) = ui.allocate_exact_size(vec2(108.0, 22.0), Sense::click());
                     let p = ui.painter();
-                    p.rect_filled(r, 3.0, if sel { widgets::shade(c, 0.55) } else if resp.hovered() { col::PANEL_HI } else { col::STEP_A });
+                    p.rect_filled(
+                        r,
+                        3.0,
+                        if sel {
+                            widgets::shade(c, 0.55)
+                        } else if resp.hovered() {
+                            col::PANEL_HI
+                        } else {
+                            col::STEP_A
+                        },
+                    );
                     p.rect_filled(Rect::from_min_size(r.min, vec2(4.0, r.height())), 2.0, c);
                     if sel {
                         p.rect_stroke(r, 3.0, Stroke::new(1.0, c), StrokeKind::Inside);
@@ -175,7 +197,13 @@ impl App {
                             let vel = self.project.patterns[pi].data[ci].steps[si];
                             let base = if (si / 4) % 2 == 0 { col::STEP_A } else { col::STEP_B };
                             let p = ui.painter();
-                            let fill = if vel > 0.0 { widgets::shade(col::STEP_ON, 0.65 + 0.35 * vel) } else if resp.hovered() { widgets::shade(base, 1.25) } else { base };
+                            let fill = if vel > 0.0 {
+                                widgets::shade(col::STEP_ON, 0.65 + 0.35 * vel)
+                            } else if resp.hovered() {
+                                widgets::shade(base, 1.25)
+                            } else {
+                                base
+                            };
                             p.rect_filled(r, 2.0, fill);
                             if vel > 0.0 {
                                 p.rect_filled(Rect::from_min_size(pos2(r.left() + 2.0, r.top() + 2.0), vec2(r.width() - 4.0, 2.0)), 0.0, c);

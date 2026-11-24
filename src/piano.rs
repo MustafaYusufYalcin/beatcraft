@@ -106,7 +106,13 @@ impl App {
             let total_steps = len_ticks / STEP_TICKS;
             for s in 0..=total_steps {
                 let x = grid.left() + s as f32 * step_px;
-                let c = if s % STEPS_PER_BAR == 0 { col::GRID_BAR } else if s % 4 == 0 { Color32::from_rgb(0x44, 0x4e, 0x55) } else { Color32::from_rgb(0x36, 0x3f, 0x45) };
+                let c = if s % STEPS_PER_BAR == 0 {
+                    col::GRID_BAR
+                } else if s % 4 == 0 {
+                    Color32::from_rgb(0x44, 0x4e, 0x55)
+                } else {
+                    Color32::from_rgb(0x36, 0x3f, 0x45)
+                };
                 p.line_segment([pos2(x, grid.top()), pos2(x, grid.bottom())], Stroke::new(1.0, c));
             }
             // pattern end marker
@@ -127,7 +133,8 @@ impl App {
             }
             // notes
             let notes = &self.project.patterns[pi].data[ci].notes;
-            let note_rect = |n: &Note| Rect::from_min_size(pos2(grid.left() + n.start as f32 * tick_px, key_y(n.key) + 0.5), vec2((n.len as f32 * tick_px - 1.0).max(3.0), KEY_H - 1.0));
+            let note_rect =
+                |n: &Note| Rect::from_min_size(pos2(grid.left() + n.start as f32 * tick_px, key_y(n.key) + 0.5), vec2((n.len as f32 * tick_px - 1.0).max(3.0), KEY_H - 1.0));
             for (i, n) in notes.iter().enumerate() {
                 if n.key < LOW_KEY || n.key >= HIGH_KEY {
                     continue;
@@ -266,4 +273,3 @@ impl App {
         }
     }
 }
-

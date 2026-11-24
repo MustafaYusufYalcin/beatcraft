@@ -567,71 +567,67 @@ impl App {
 
     // ------------------------------------------------------------------ browser
     fn browser(&mut self, ctx: &egui::Context) {
-        egui::SidePanel::left("browser")
-            .default_width(190.0)
-            .resizable(true)
-            .frame(egui::Frame::new().fill(col::PANEL).inner_margin(egui::Margin::same(0)))
-            .show(ctx, |ui| {
-                widgets::panel_header(ui, "  BROWSER");
-                egui::ScrollArea::vertical().show(ui, |ui| {
-                    ui.spacing_mut().item_spacing.y = 1.0;
-                    ui.add_space(4.0);
-                    egui::CollapsingHeader::new(RichText::new("📁 Current project").color(col::TEXT)).default_open(true).show(ui, |ui| {
-                        egui::CollapsingHeader::new(RichText::new("Patterns").color(col::DIM)).default_open(true).show(ui, |ui| {
-                            for i in 0..self.project.patterns.len() {
-                                let p = &self.project.patterns[i];
-                                let sel = i == self.current_pattern;
-                                let txt = RichText::new(format!("▦ {}", p.name)).color(if sel { col::ACCENT } else { col::TEXT });
-                                if ui.selectable_label(sel, txt).clicked() {
-                                    self.current_pattern = i;
-                                }
-                            }
-                        });
-                        egui::CollapsingHeader::new(RichText::new("Channels").color(col::DIM)).default_open(true).show(ui, |ui| {
-                            for i in 0..self.project.channels.len() {
-                                let c = &self.project.channels[i];
-                                let sel = i == self.selected_channel;
-                                if ui.selectable_label(sel, RichText::new(format!("♪ {}", c.name)).color(widgets::rgb(c.color))).clicked() {
-                                    self.selected_channel = i;
-                                    self.selected_insert = c.insert;
-                                }
-                            }
-                        });
-                    });
-                    egui::CollapsingHeader::new(RichText::new("📁 Instruments").color(col::TEXT)).default_open(true).show(ui, |ui| {
-                        for k in InstKind::ALL {
-                            let r = ui.selectable_label(false, RichText::new(format!("{} {}", if k.is_drum() { "◉" } else { "♫" }, k.label())).color(col::TEXT));
-                            if r.on_hover_text("Click to add to the channel rack").clicked() {
-                                self.add_channel(k);
+        egui::SidePanel::left("browser").default_width(190.0).resizable(true).frame(egui::Frame::new().fill(col::PANEL).inner_margin(egui::Margin::same(0))).show(ctx, |ui| {
+            widgets::panel_header(ui, "  BROWSER");
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                ui.spacing_mut().item_spacing.y = 1.0;
+                ui.add_space(4.0);
+                egui::CollapsingHeader::new(RichText::new("📁 Current project").color(col::TEXT)).default_open(true).show(ui, |ui| {
+                    egui::CollapsingHeader::new(RichText::new("Patterns").color(col::DIM)).default_open(true).show(ui, |ui| {
+                        for i in 0..self.project.patterns.len() {
+                            let p = &self.project.patterns[i];
+                            let sel = i == self.current_pattern;
+                            let txt = RichText::new(format!("▦ {}", p.name)).color(if sel { col::ACCENT } else { col::TEXT });
+                            if ui.selectable_label(sel, txt).clicked() {
+                                self.current_pattern = i;
                             }
                         }
                     });
-                    egui::CollapsingHeader::new(RichText::new("📁 Effects").color(col::TEXT)).default_open(true).show(ui, |ui| {
-                        for fx in [FxKind::Filter, FxKind::Delay, FxKind::Reverb, FxKind::Limiter] {
-                            let r = ui.selectable_label(false, RichText::new(format!("⚙ {}", fx.label())).color(col::TEXT));
-                            if r.on_hover_text("Click to load into the selected mixer track").clicked() {
-                                let ins = &mut self.project.mixer[self.selected_insert];
-                                if let Some(slot) = ins.slots.iter_mut().find(|s| s.is_none()) {
-                                    *slot = Some(fx);
-                                    self.hint = format!("{} loaded on {}", fx.label(), ins.name);
-                                    self.mark();
-                                }
-                            }
-                        }
-                    });
-                    egui::CollapsingHeader::new(RichText::new("📁 Projects").color(col::TEXT)).default_open(false).show(ui, |ui| {
-                        if ui.selectable_label(false, "★ Demo song").clicked() {
-                            self.set_project(Project::demo());
-                        }
-                        for p in Self::saved_projects() {
-                            let name = p.file_name().map(|n| n.to_string_lossy().replace(".beatcraft.json", "")).unwrap_or_default();
-                            if ui.selectable_label(false, format!("▤ {name}")).clicked() {
-                                self.load(&p);
+                    egui::CollapsingHeader::new(RichText::new("Channels").color(col::DIM)).default_open(true).show(ui, |ui| {
+                        for i in 0..self.project.channels.len() {
+                            let c = &self.project.channels[i];
+                            let sel = i == self.selected_channel;
+                            if ui.selectable_label(sel, RichText::new(format!("♪ {}", c.name)).color(widgets::rgb(c.color))).clicked() {
+                                self.selected_channel = i;
+                                self.selected_insert = c.insert;
                             }
                         }
                     });
                 });
+                egui::CollapsingHeader::new(RichText::new("📁 Instruments").color(col::TEXT)).default_open(true).show(ui, |ui| {
+                    for k in InstKind::ALL {
+                        let r = ui.selectable_label(false, RichText::new(format!("{} {}", if k.is_drum() { "◉" } else { "♫" }, k.label())).color(col::TEXT));
+                        if r.on_hover_text("Click to add to the channel rack").clicked() {
+                            self.add_channel(k);
+                        }
+                    }
+                });
+                egui::CollapsingHeader::new(RichText::new("📁 Effects").color(col::TEXT)).default_open(true).show(ui, |ui| {
+                    for fx in [FxKind::Filter, FxKind::Delay, FxKind::Reverb, FxKind::Limiter] {
+                        let r = ui.selectable_label(false, RichText::new(format!("⚙ {}", fx.label())).color(col::TEXT));
+                        if r.on_hover_text("Click to load into the selected mixer track").clicked() {
+                            let ins = &mut self.project.mixer[self.selected_insert];
+                            if let Some(slot) = ins.slots.iter_mut().find(|s| s.is_none()) {
+                                *slot = Some(fx);
+                                self.hint = format!("{} loaded on {}", fx.label(), ins.name);
+                                self.mark();
+                            }
+                        }
+                    }
+                });
+                egui::CollapsingHeader::new(RichText::new("📁 Projects").color(col::TEXT)).default_open(false).show(ui, |ui| {
+                    if ui.selectable_label(false, "★ Demo song").clicked() {
+                        self.set_project(Project::demo());
+                    }
+                    for p in Self::saved_projects() {
+                        let name = p.file_name().map(|n| n.to_string_lossy().replace(".beatcraft.json", "")).unwrap_or_default();
+                        if ui.selectable_label(false, format!("▤ {name}")).clicked() {
+                            self.load(&p);
+                        }
+                    }
+                });
             });
+        });
     }
 
     fn help(&mut self, ctx: &egui::Context) {
@@ -663,9 +659,7 @@ impl App {
             self.shot_requested = true;
             ctx.send_viewport_cmd(egui::ViewportCommand::Screenshot(egui::UserData::default()));
         }
-        let shot = ctx.input(|i| {
-            i.raw.events.iter().find_map(|e| if let egui::Event::Screenshot { image, .. } = e { Some(image.clone()) } else { None })
-        });
+        let shot = ctx.input(|i| i.raw.events.iter().find_map(|e| if let egui::Event::Screenshot { image, .. } = e { Some(image.clone()) } else { None }));
         if let Some(img) = shot {
             let [w, h] = img.size;
             let mut buf = Vec::with_capacity(w * h * 4);
@@ -742,7 +736,17 @@ impl eframe::App for App {
 fn transport_button(ui: &mut egui::Ui, icon: &str, active: bool, c: Color32) -> egui::Response {
     let (r, resp) = ui.allocate_exact_size(vec2(34.0, 34.0), Sense::click());
     let p = ui.painter();
-    p.rect_filled(r, 4.0, if active { widgets::shade(c, 0.45) } else if resp.hovered() { col::PANEL_HI } else { col::DARK });
+    p.rect_filled(
+        r,
+        4.0,
+        if active {
+            widgets::shade(c, 0.45)
+        } else if resp.hovered() {
+            col::PANEL_HI
+        } else {
+            col::DARK
+        },
+    );
     p.rect_stroke(r, 4.0, Stroke::new(1.0, if active { c } else { col::GRID }), egui::StrokeKind::Inside);
     p.text(r.center(), Align2::CENTER_CENTER, icon, FontId::proportional(16.0), c);
     resp
@@ -751,8 +755,32 @@ fn transport_button(ui: &mut egui::Ui, icon: &str, active: bool, c: Color32) -> 
 fn qwerty_semitone(k: Key) -> Option<i32> {
     use Key::*;
     Some(match k {
-        Z => 0, S => 1, X => 2, D => 3, C => 4, V => 5, G => 6, B => 7, H => 8, N => 9, J => 10, M => 11, Comma => 12,
-        Q => 12, Num2 => 13, W => 14, Num3 => 15, E => 16, R => 17, Num5 => 18, T => 19, Num6 => 20, Y => 21, Num7 => 22, U => 23, I => 24,
+        Z => 0,
+        S => 1,
+        X => 2,
+        D => 3,
+        C => 4,
+        V => 5,
+        G => 6,
+        B => 7,
+        H => 8,
+        N => 9,
+        J => 10,
+        M => 11,
+        Comma => 12,
+        Q => 12,
+        Num2 => 13,
+        W => 14,
+        Num3 => 15,
+        E => 16,
+        R => 17,
+        Num5 => 18,
+        T => 19,
+        Num6 => 20,
+        Y => 21,
+        Num7 => 22,
+        U => 23,
+        I => 24,
         _ => return None,
     })
 }

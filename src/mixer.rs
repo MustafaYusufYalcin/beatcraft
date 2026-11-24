@@ -47,7 +47,17 @@ impl App {
         // channels routed here
         let routed: Vec<Color32> = self.project.channels.iter().filter(|c| c.insert == i).map(|c| widgets::rgb(c.color)).collect();
         let p = ui.painter().clone();
-        p.rect_filled(rect, 3.0, if sel { col::PANEL_HI } else if master { Color32::from_rgb(0x3b, 0x45, 0x4c) } else { col::DARK });
+        p.rect_filled(
+            rect,
+            3.0,
+            if sel {
+                col::PANEL_HI
+            } else if master {
+                Color32::from_rgb(0x3b, 0x45, 0x4c)
+            } else {
+                col::DARK
+            },
+        );
         if sel {
             p.rect_stroke(rect, 3.0, Stroke::new(1.0, col::ACCENT), StrokeKind::Inside);
         }
@@ -56,10 +66,22 @@ impl App {
         }
         let ins = &mut self.project.mixer[i];
         // number + name
-        let label = if master { "M".to_string() } else if i == MIXER_TRACKS - 1 { "C".to_string() } else { i.to_string() };
+        let label = if master {
+            "M".to_string()
+        } else if i == MIXER_TRACKS - 1 {
+            "C".to_string()
+        } else {
+            i.to_string()
+        };
         p.text(pos2(rect.center().x, rect.top() + 8.0), Align2::CENTER_CENTER, label, FontId::monospace(10.0), col::DIM);
         let name_r = Rect::from_min_size(pos2(rect.left() + 2.0, rect.top() + 15.0), vec2(rect.width() - 4.0, 14.0));
-        p.with_clip_rect(name_r).text(name_r.center(), Align2::CENTER_CENTER, &ins.name, FontId::proportional(10.0), if routed.is_empty() && !master { col::DIM } else { col::TEXT });
+        p.with_clip_rect(name_r).text(
+            name_r.center(),
+            Align2::CENTER_CENTER,
+            &ins.name,
+            FontId::proportional(10.0),
+            if routed.is_empty() && !master { col::DIM } else { col::TEXT },
+        );
         // routing colours
         for (k, c) in routed.iter().take(4).enumerate() {
             p.rect_filled(Rect::from_min_size(pos2(rect.left() + 4.0 + k as f32 * 6.0, rect.top() + 31.0), vec2(5.0, 3.0)), 0.0, *c);

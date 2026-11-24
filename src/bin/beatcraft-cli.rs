@@ -1,16 +1,16 @@
 //! beatcraft-cli: run BeatCraft commands on a project file, render it, or serve them over MCP.
 
+#[path = "../commands.rs"]
+mod commands;
+#[allow(dead_code)]
+#[path = "../engine.rs"]
+mod engine;
 #[allow(dead_code)]
 #[path = "../model.rs"]
 mod model;
 #[allow(dead_code)]
 #[path = "../synth.rs"]
 mod synth;
-#[allow(dead_code)]
-#[path = "../engine.rs"]
-mod engine;
-#[path = "../commands.rs"]
-mod commands;
 
 use serde_json::{json, Value};
 use std::io::{BufRead, Write};

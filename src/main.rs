@@ -68,7 +68,12 @@ fn main() -> eframe::Result<()> {
         return Ok(());
     }
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([1600.0, 960.0]).with_min_inner_size([1100.0, 700.0]).with_title("BeatCraft").with_app_id("beatcraft").with_icon(std::sync::Arc::new(icon::icon_data())),
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([1600.0, 960.0])
+            .with_min_inner_size([1100.0, 700.0])
+            .with_title("BeatCraft")
+            .with_app_id("beatcraft")
+            .with_icon(std::sync::Arc::new(icon::icon_data())),
         ..Default::default()
     };
     eframe::run_native("BeatCraft", options, Box::new(move |cc| Ok(Box::new(app::App::new(cc, screenshot, open)))))
@@ -85,9 +90,7 @@ fn main() {
             .and_then(|d| d.get_element_by_id("beatcraft"))
             .and_then(|e| e.dyn_into::<web_sys::HtmlCanvasElement>().ok())
             .expect("canvas #beatcraft missing");
-        let _ = eframe::WebRunner::new()
-            .start(canvas, options, Box::new(|cc| Ok(Box::new(app::App::new(cc, None, None)))))
-            .await;
+        let _ = eframe::WebRunner::new().start(canvas, options, Box::new(|cc| Ok(Box::new(app::App::new(cc, None, None))))).await;
         if let Some(l) = web_sys::window().and_then(|w| w.document()).and_then(|d| d.get_element_by_id("loading")) {
             l.remove();
         }
