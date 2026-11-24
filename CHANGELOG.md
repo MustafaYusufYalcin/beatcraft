@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.2.0 - 2026-11-24
 
 - Fixed `note.add` and `clip.add` crashing the CLI and MCP server on huge positions; both now return an
   error past bar 1000.
