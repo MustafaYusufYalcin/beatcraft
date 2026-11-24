@@ -140,9 +140,9 @@ impl App {
             ui.label(RichText::new(format!("{:+.1} dB · {} effect slots", fader_db(ins.volume), FX_SLOTS)).size(10.0).color(col::DIM));
             ui.add_space(2.0);
             egui::ScrollArea::vertical().id_salt("fxslots").max_height(112.0).show(ui, |ui| {
-                for s in 0..FX_SLOTS {
+                for (s, slot) in ins.slots.iter_mut().enumerate().take(FX_SLOTS) {
                     ui.horizontal(|ui| {
-                        let cur = ins.slots[s];
+                        let cur = *slot;
                         let (r, _) = ui.allocate_exact_size(vec2(8.0, 8.0), Sense::hover());
                         ui.painter().circle_filled(r.center(), 3.5, if cur.is_some() { col::GREEN } else { col::DARKER });
                         egui::ComboBox::from_id_salt(("slot", i, s))
@@ -150,12 +150,12 @@ impl App {
                             .selected_text(RichText::new(cur.map(|f| f.label()).unwrap_or("(empty)")).size(11.0).color(if cur.is_some() { col::TEXT } else { col::DIM }))
                             .show_ui(ui, |ui| {
                                 if ui.selectable_label(cur.is_none(), "(empty)").clicked() {
-                                    ins.slots[s] = None;
+                                    *slot = None;
                                     self.dirty = true;
                                 }
                                 for f in [FxKind::Filter, FxKind::Delay, FxKind::Reverb, FxKind::Limiter] {
                                     if ui.selectable_label(cur == Some(f), f.label()).clicked() {
-                                        ins.slots[s] = Some(f);
+                                        *slot = Some(f);
                                         self.dirty = true;
                                     }
                                 }
