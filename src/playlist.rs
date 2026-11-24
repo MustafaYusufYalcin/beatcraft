@@ -52,7 +52,7 @@ impl App {
                 p.rect_filled(ruler, 0.0, col::DARK);
                 for b in 0..bars {
                     let x = grid.left() + b as f32 * self.bar_px;
-                    p.line_segment([pos2(x, ruler.top() + 8.0), pos2(x, ruler.bottom())], Stroke::new(1.0, col::DIM));
+                    p.line_segment([pos2(x, ruler.top() + 8.0), pos2(x, ruler.bottom())], Stroke::new(1.0_f32, col::DIM));
                     if self.bar_px >= 30.0 || b % 2 == 0 {
                         p.text(pos2(x + 3.0, ruler.top() + 2.0), Align2::LEFT_TOP, (b + 1).to_string(), FontId::proportional(10.0), col::TEXT);
                     }
@@ -69,10 +69,10 @@ impl App {
                         let x = grid.left() + b as f32 * self.bar_px / 4.0;
                         let c = if b % 4 == 0 { col::GRID_BAR } else { col::GRID };
                         if b % 4 == 0 || self.bar_px >= 48.0 {
-                            p.line_segment([pos2(x, y), pos2(x, y + TRACK_H)], Stroke::new(1.0, c));
+                            p.line_segment([pos2(x, y), pos2(x, y + TRACK_H)], Stroke::new(1.0_f32, c));
                         }
                     }
-                    p.line_segment([pos2(grid.left(), y + TRACK_H), pos2(grid.right(), y + TRACK_H)], Stroke::new(1.0, col::DARKER));
+                    p.line_segment([pos2(grid.left(), y + TRACK_H), pos2(grid.right(), y + TRACK_H)], Stroke::new(1.0_f32, col::DARKER));
                     // header
                     let hr = Rect::from_min_size(pos2(rect.left(), y), vec2(HEADER_W - 2.0, TRACK_H - 1.0));
                     p.rect_filled(hr, 0.0, col::PANEL);
@@ -97,7 +97,7 @@ impl App {
                     p.rect_filled(r, 3.0, widgets::shade(pc, 0.42));
                     let title = Rect::from_min_size(r.min, vec2(r.width(), 13.0));
                     p.rect_filled(title, 3.0, widgets::shade(pc, 0.8));
-                    p.rect_stroke(r, 3.0, Stroke::new(1.0, if dragging { Color32::WHITE } else { widgets::shade(pc, 0.95) }), StrokeKind::Inside);
+                    p.rect_stroke(r, 3.0, Stroke::new(1.0_f32, if dragging { Color32::WHITE } else { widgets::shade(pc, 0.95) }), StrokeKind::Inside);
                     let clip_p = p.with_clip_rect(r.shrink(1.0));
                     clip_p.text(title.left_center() + vec2(4.0, 0.0), Align2::LEFT_CENTER, &pat.name, FontId::proportional(10.0), col::DARKER);
                     // mini preview
@@ -132,7 +132,7 @@ impl App {
                                 }
                                 let x = r.left() + t as f32 * tick_px;
                                 let y = body.bottom() - (n.key.saturating_sub(lo)) as f32 / span * body.height();
-                                clip_p.line_segment([pos2(x, y), pos2(x + n.len as f32 * tick_px - 1.0, y)], Stroke::new(2.0, Color32::from_white_alpha(150)));
+                                clip_p.line_segment([pos2(x, y), pos2(x + n.len as f32 * tick_px - 1.0, y)], Stroke::new(2.0_f32, Color32::from_white_alpha(150)));
                             }
                         }
                     }
@@ -140,7 +140,7 @@ impl App {
                 // playhead
                 if self.song_mode {
                     let x = grid.left() + self.pos_ticks as f32 * tick_px;
-                    p.line_segment([pos2(x, rect.top()), pos2(x, rect.bottom())], Stroke::new(1.5, col::ACCENT));
+                    p.line_segment([pos2(x, rect.top()), pos2(x, rect.bottom())], Stroke::new(1.5_f32, col::ACCENT));
                     p.add(egui::Shape::convex_polygon(vec![pos2(x - 5.0, rect.top()), pos2(x + 5.0, rect.top()), pos2(x, rect.top() + 7.0)], col::ACCENT, Stroke::NONE));
                 }
                 // interaction

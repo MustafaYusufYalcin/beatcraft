@@ -14,7 +14,7 @@ mod synth;
 
 use serde_json::{json, Value};
 use std::io::{BufRead, Write};
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 const USAGE: &str = "beatcraft-cli — drive BeatCraft from scripts and AI agents
 
@@ -22,15 +22,17 @@ const USAGE: &str = "beatcraft-cli — drive BeatCraft from scripts and AI agent
   beatcraft-cli run <project.json> <command> [json]    run one command (the file is created if missing)
   beatcraft-cli info <project.json>                    print a project summary
   beatcraft-cli render <project.json> <out.wav>        render the song to a WAV file
-  beatcraft-cli mcp                                    serve the commands as an MCP server on stdio
+  beatcraft-cli mcp [--automation-read-root DIR]... [--automation-write-root DIR]...
+                                                       serve the commands as an MCP server on stdio,
+                                                       optionally confined to folders
   beatcraft-cli --version";
 
-fn load(path: &Path) -> Result<model::Project, String> {
+fn load(path: &Path, create_if_missing: bool) -> Result<model::Project, String> {
     if !path.exists() {
-        return Ok(model::Project::empty());
+        return if create_if_missing { Ok(model::Project::empty()) } else { Err(format!("no such project file: {}", path.display())) };
     }
     let t = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
-    serde_json::from_str(&t).map_err(|e| format!("not a BeatCraft project: {e}"))
+    model::Project::from_json(&t)
 }
 
 fn save(path: &Path, p: &model::Project) -> Result<(), String> {
@@ -46,7 +48,7 @@ fn main() {
             println!("beatcraft-cli {}", env!("CARGO_PKG_VERSION"));
             return;
         }
-        Some("info") if args.len() == 2 => load(Path::new(&args[1])).map(|p| commands::info(&p)),
+        Some("info") if args.len() == 2 => load(Path::new(&args[1]), false).map(|p| commands::info(&p)),
         Some("run") if args.len() >= 3 => {
             let path = PathBuf::from(&args[1]);
             let params: Result<Value, String> = match args.get(3) {
@@ -54,15 +56,22 @@ fn main() {
                 None => Ok(json!({})),
             };
             params.and_then(|params| {
-                let mut p = load(&path)?;
+                let mut p = load(&path, true)?;
                 let r = commands::run(&mut p, &args[2], &params)?;
                 save(&path, &p)?;
                 Ok(r)
             })
         }
-        Some("render") if args.len() == 3 => load(Path::new(&args[1])).and_then(|mut p| commands::run(&mut p, "song.export_wav", &json!({"path": args[2]}))),
+        Some("render") if args.len() == 3 => load(Path::new(&args[1]), false).and_then(|mut p| commands::run(&mut p, "song.export_wav", &json!({"path": args[2]}))),
         Some("mcp") => {
-            mcp();
+            let roots = match parse_mcp_args(&args[1..]) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("error: {e}\n{USAGE}");
+                    std::process::exit(2);
+                }
+            };
+            mcp(roots);
             return;
         }
         _ => {
@@ -81,9 +90,88 @@ fn main() {
 
 // ------------------------------------------------------------------ MCP (JSON-RPC 2.0 over stdio)
 
+/// Folders the MCP server may read from and write to. Without any root flag the server is unconfined.
+struct Roots {
+    read: Vec<PathBuf>,
+    write: Vec<PathBuf>,
+}
+
+impl Roots {
+    fn check(&self, path: &Path, write: bool) -> Result<PathBuf, String> {
+        let (roots, kind) = if write { (&self.write, "write") } else { (&self.read, "read") };
+        if roots.is_empty() {
+            return Err(format!("automation filesystem access is not granted: {kind} authority is absent: {}", path.display()));
+        }
+        let rejected = || {
+            let list: Vec<String> = roots.iter().map(|r| r.display().to_string()).collect();
+            format!("automation path rejected: outside the {kind} root{} {}: {}", if roots.len() > 1 { "s" } else { "" }, list.join(", "), path.display())
+        };
+        let abs = std::env::current_dir().map_err(|e| e.to_string())?.join(path);
+        let comps: Vec<Component> = abs.components().collect();
+        let mut split = comps.len();
+        let mut base = abs.clone();
+        while split > 0 {
+            base = comps[..split].iter().collect();
+            if std::fs::symlink_metadata(&base).is_ok() {
+                break;
+            }
+            split -= 1;
+        }
+        if split == 0 {
+            return Err(rejected());
+        }
+        let mut resolved = std::fs::canonicalize(&base).map_err(|_| rejected())?;
+        for c in &comps[split..] {
+            match c {
+                Component::Normal(n) => resolved.push(n),
+                _ => return Err(rejected()),
+            }
+        }
+        if roots.iter().any(|r| resolved.starts_with(r)) {
+            Ok(resolved)
+        } else {
+            Err(rejected())
+        }
+    }
+}
+
+fn parse_mcp_args(args: &[String]) -> Result<Option<Roots>, String> {
+    let mut roots = Roots { read: Vec::new(), write: Vec::new() };
+    let mut confined = false;
+    let mut i = 0;
+    while i < args.len() {
+        let a = &args[i];
+        let (flag, value) = match a.split_once('=') {
+            Some((f, v)) => (f, Some(v.to_string())),
+            None => (a.as_str(), None),
+        };
+        let list = match flag {
+            "--automation-read-root" => &mut roots.read,
+            "--automation-write-root" => &mut roots.write,
+            _ => return Err(format!("unknown argument `{a}` after `mcp`")),
+        };
+        let dir = match value {
+            Some(v) => v,
+            None => {
+                i += 1;
+                args.get(i).cloned().ok_or_else(|| format!("`{flag}` needs a folder"))?
+            }
+        };
+        let canon = std::fs::canonicalize(&dir).map_err(|e| format!("root `{dir}` is not usable: {e}"))?;
+        if !canon.is_dir() {
+            return Err(format!("root `{dir}` is not a folder"));
+        }
+        list.push(canon);
+        confined = true;
+        i += 1;
+    }
+    Ok(confined.then_some(roots))
+}
+
 struct Session {
     project: model::Project,
     path: Option<PathBuf>,
+    roots: Option<Roots>,
 }
 
 fn tools() -> Value {
@@ -102,9 +190,23 @@ fn tools() -> Value {
 }
 
 impl Session {
+    fn check(&self, path: &Path, write: bool) -> Result<PathBuf, String> {
+        match &self.roots {
+            Some(r) => r.check(path, write),
+            None => Ok(path.to_path_buf()),
+        }
+    }
+    fn guard(&self, id: &str, params: &Value) -> Result<(), String> {
+        if id == "song.export_wav" {
+            if let Some(p) = params.get("path").and_then(Value::as_str) {
+                self.check(Path::new(p), true)?;
+            }
+        }
+        Ok(())
+    }
     fn autosave(&self) -> Result<(), String> {
         match &self.path {
-            Some(p) => save(p, &self.project),
+            Some(p) => save(&self.check(p, true)?, &self.project),
             None => Ok(()),
         }
     }
@@ -114,6 +216,7 @@ impl Session {
             "inspect_project" => Ok(commands::info(&self.project)),
             "execute" => {
                 let id = a.get("command").and_then(Value::as_str).ok_or("missing `command`")?;
+                self.guard(id, a.get("params").unwrap_or(&Value::Null))?;
                 let r = commands::run(&mut self.project, id, a.get("params").unwrap_or(&Value::Null))?;
                 self.autosave()?;
                 Ok(r)
@@ -123,7 +226,8 @@ impl Session {
                 let mut results = Vec::new();
                 for (i, s) in steps.iter().enumerate() {
                     let id = s.get("command").and_then(Value::as_str).ok_or(format!("step {i}: missing `command`"))?;
-                    let r = commands::run(&mut self.project, id, s.get("params").unwrap_or(&Value::Null)).map_err(|e| format!("step {i} ({id}): {e}"))?;
+                    let params = s.get("params").unwrap_or(&Value::Null);
+                    let r = self.guard(id, params).and_then(|()| commands::run(&mut self.project, id, params)).map_err(|e| format!("step {i} ({id}): {e}"))?;
                     results.push(r);
                 }
                 self.autosave()?;
@@ -131,26 +235,53 @@ impl Session {
             }
             "open_project" => {
                 let p = PathBuf::from(a.get("path").and_then(Value::as_str).ok_or("missing `path`")?);
-                self.project = load(&p)?;
-                self.path = Some(p);
-                Ok(commands::info(&self.project))
+                if self.roots.is_none() {
+                    self.project = load(&p, true)?;
+                    self.path = Some(p);
+                    return Ok(commands::info(&self.project));
+                }
+                if p.exists() {
+                    let readable = self.check(&p, false)?;
+                    let project = load(&readable, false)?;
+                    let bound = self.check(&p, true);
+                    self.project = project;
+                    let mut info = commands::info(&self.project);
+                    match bound {
+                        Ok(w) => self.path = Some(w),
+                        Err(_) => {
+                            self.path = None;
+                            info["autosave"] = json!(false);
+                            info["note"] = json!("outside the write roots: changes are not saved to this file");
+                        }
+                    }
+                    Ok(info)
+                } else {
+                    let w = self.check(&p, true)?;
+                    self.project = model::Project::empty();
+                    self.path = Some(w);
+                    Ok(commands::info(&self.project))
+                }
             }
             "save_project" => {
-                if let Some(p) = a.get("path").and_then(Value::as_str) {
-                    self.path = Some(PathBuf::from(p));
-                }
-                let p = self.path.clone().ok_or("no file yet: pass `path`")?;
+                let p = match a.get("path").and_then(Value::as_str) {
+                    Some(p) => self.check(Path::new(p), true)?,
+                    None => self.check(&self.path.clone().ok_or("no file yet: pass `path`")?, true)?,
+                };
+                self.path = Some(p.clone());
                 save(&p, &self.project)?;
                 Ok(json!({"saved": p}))
             }
-            "export_wav" => commands::run(&mut self.project, "song.export_wav", a),
+            "export_wav" => {
+                self.guard("song.export_wav", a)?;
+                commands::run(&mut self.project, "song.export_wav", a)
+            }
             _ => Err(format!("unknown tool `{name}`")),
         }
     }
 }
 
-fn mcp() {
-    let mut s = Session { project: model::Project::empty(), path: None };
+fn mcp(roots: Option<Roots>) {
+    let mut s = Session { project: model::Project::empty(), path: None, roots };
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout();
     for line in stdin.lock().lines() {

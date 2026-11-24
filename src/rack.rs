@@ -112,7 +112,7 @@ impl App {
                     );
                     p.rect_filled(Rect::from_min_size(r.min, vec2(4.0, r.height())), 2.0, c);
                     if sel {
-                        p.rect_stroke(r, 3.0, Stroke::new(1.0, c), StrokeKind::Inside);
+                        p.rect_stroke(r, 3.0, Stroke::new(1.0_f32, c), StrokeKind::Inside);
                     }
                     p.text(r.left_center() + vec2(9.0, 0.0), Align2::LEFT_CENTER, &ch.name, FontId::proportional(12.0), Color32::WHITE);
                     if resp.clicked() {
@@ -182,7 +182,7 @@ impl App {
                         }
                         if let Some(s) = play_step {
                             let x = r.left() + (s as f32 + 0.5) / steps as f32 * r.width();
-                            p.line_segment([pos2(x, r.top()), pos2(x, r.bottom())], Stroke::new(1.0, col::ACCENT));
+                            p.line_segment([pos2(x, r.top()), pos2(x, r.bottom())], Stroke::new(1.0_f32, col::ACCENT));
                         }
                         if resp.on_hover_text("This channel uses the piano roll — click to open it").clicked() {
                             self.selected_channel = ci;
@@ -209,7 +209,7 @@ impl App {
                                 p.rect_filled(Rect::from_min_size(pos2(r.left() + 2.0, r.top() + 2.0), vec2(r.width() - 4.0, 2.0)), 0.0, c);
                             }
                             if play_step == Some(si as u32) {
-                                p.rect_stroke(r, 2.0, Stroke::new(1.5, col::ACCENT), StrokeKind::Inside);
+                                p.rect_stroke(r, 2.0, Stroke::new(1.5_f32, col::ACCENT), StrokeKind::Inside);
                             }
                             let d = &mut self.project.patterns[pi].data[ci];
                             if resp.clicked() {

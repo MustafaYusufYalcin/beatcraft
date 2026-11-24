@@ -59,7 +59,7 @@ impl App {
             },
         );
         if sel {
-            p.rect_stroke(rect, 3.0, Stroke::new(1.0, col::ACCENT), StrokeKind::Inside);
+            p.rect_stroke(rect, 3.0, Stroke::new(1.0_f32, col::ACCENT), StrokeKind::Inside);
         }
         if resp.clicked() {
             self.selected_insert = i;
@@ -132,7 +132,7 @@ impl App {
             ui.add_space(4.0);
             let ins = &mut self.project.mixer[i];
             ui.horizontal(|ui| {
-                ui.label(RichText::new(format!("{}", if i == 0 { "MASTER".to_string() } else { format!("INSERT {i}") })).color(col::ACCENT).strong());
+                ui.label(RichText::new(if i == 0 { "MASTER".to_string() } else { format!("INSERT {i}") }).color(col::ACCENT).strong());
                 if i != 0 && i != MIXER_TRACKS - 1 && ui.add(egui::TextEdit::singleline(&mut ins.name).desired_width(120.0)).changed() {
                     self.dirty = true;
                 }
@@ -164,7 +164,7 @@ impl App {
                 }
             });
             ui.add_space(4.0);
-            let has = |k: FxKind| ins.slots.iter().any(|x| *x == Some(k));
+            let has = |k: FxKind| ins.slots.contains(&Some(k));
             let (hf, hd, hr) = (has(FxKind::Filter), has(FxKind::Delay), has(FxKind::Reverb));
             ui.horizontal(|ui| {
                 for (label, v, on, c) in [

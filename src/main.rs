@@ -72,7 +72,7 @@ fn main() -> eframe::Result<()> {
             .with_inner_size([1600.0, 960.0])
             .with_min_inner_size([1100.0, 700.0])
             .with_title("BeatCraft")
-            .with_app_id("beatcraft")
+            .with_app_id("io.github.mustafayusufyalcin.beatcraft")
             .with_icon(std::sync::Arc::new(icon::icon_data())),
         ..Default::default()
     };

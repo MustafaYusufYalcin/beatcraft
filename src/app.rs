@@ -53,7 +53,6 @@ pub struct App {
     pub held_keys: Vec<(Key, u8)>,
     pub octave: i32,
     tap_times: Vec<f64>,
-    pub rename: Option<(usize, String)>,
     // screenshot
     frame: u64,
     screenshot: Option<PathBuf>,
@@ -99,7 +98,6 @@ impl App {
             held_keys: Vec::new(),
             octave: 5,
             tap_times: Vec::new(),
-            rename: None,
             frame: 0,
             shot_requested: false,
             first_frame: true,
@@ -166,11 +164,8 @@ impl App {
         self.playing = !self.playing;
         if let Ok(mut s) = self.shared.lock() {
             s.playing = self.playing;
-            if !self.playing {
-                s.pos_ticks = 0.0;
-            }
         }
-        self.hint = if self.playing { "Playing".into() } else { "Stopped".into() };
+        self.hint = if self.playing { "Playing".into() } else { "Paused".into() };
     }
 
     pub fn stop(&mut self) {
@@ -189,7 +184,7 @@ impl App {
     }
 
     fn projects_dir() -> PathBuf {
-        let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
+        let home = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).unwrap_or_else(|_| ".".into());
         PathBuf::from(home).join("Music").join("BeatCraft")
     }
 
@@ -204,7 +199,7 @@ impl App {
     }
 
     fn load(&mut self, path: &std::path::Path) {
-        match std::fs::read_to_string(path).ok().and_then(|t| serde_json::from_str::<Project>(&t).ok()) {
+        match std::fs::read_to_string(path).ok().and_then(|t| Project::from_json(&t).ok()) {
             Some(p) => {
                 self.set_project(p);
                 self.hint = format!("Opened {}", path.display());
@@ -223,12 +218,16 @@ impl App {
     }
 
     fn export(&mut self) {
+        if self.project.clips.is_empty() {
+            self.hint = "The playlist is empty: add clips first".into();
+            return;
+        }
         let dir = Self::projects_dir();
         let _ = std::fs::create_dir_all(&dir);
         let file = dir.join(format!("{}.wav", sanitize(&self.project.name)));
         match engine::export_wav(&self.project, &file) {
             Ok(info) => {
-                let bpm = info.measured_bpm.map(|b| format!("{b:.0} BPM")).unwrap_or_else(|| "unrealistic tempo".into());
+                let bpm = info.measured_bpm.map(|b| format!("{b:.0} BPM")).unwrap_or_else(|| "tempo not measured".into());
                 self.hint = format!("Exported {:.1} s ({}) to {}", info.seconds, bpm, file.display());
             }
             Err(e) => self.hint = format!("Export failed: {e}"),
@@ -250,13 +249,12 @@ impl App {
             let n = self.tap_times.len();
             let avg = (self.tap_times[n - 1] - self.tap_times[0]) / (n - 1) as f64;
             let bpm = (60.0 / avg) as f32;
-            // results outside the realistic 60–240 BPM window are refused
-            if (REALISTIC_TEMPO_MIN..=REALISTIC_TEMPO_MAX).contains(&bpm) {
+            if (TEMPO_MIN..=TEMPO_MAX).contains(&bpm) {
                 self.project.tempo = bpm.round();
                 self.mark();
                 self.hint = format!("Tap tempo: {:.0} BPM", bpm);
             } else {
-                self.hint = "Unrealistic tempo".into();
+                self.hint = "Tap tempo is out of range".into();
             }
         } else {
             self.hint = "Keep tapping…".into();
@@ -532,7 +530,7 @@ impl App {
                         egui::pos2(r.left() + i as f32, r.center().y - v * 16.0)
                     })
                     .collect();
-                p.add(egui::Shape::line(pts, Stroke::new(1.2, col::LCD_TEXT)));
+                p.add(egui::Shape::line(pts, Stroke::new(1.2_f32, col::LCD_TEXT)));
                 // cpu / voices
                 ui.vertical(|ui| {
                     ui.spacing_mut().item_spacing.y = 1.0;
@@ -747,7 +745,7 @@ fn transport_button(ui: &mut egui::Ui, icon: &str, active: bool, c: Color32) -> 
             col::DARK
         },
     );
-    p.rect_stroke(r, 4.0, Stroke::new(1.0, if active { c } else { col::GRID }), egui::StrokeKind::Inside);
+    p.rect_stroke(r, 4.0, Stroke::new(1.0_f32, if active { c } else { col::GRID }), egui::StrokeKind::Inside);
     p.text(r.center(), Align2::CENTER_CENTER, icon, FontId::proportional(16.0), c);
     resp
 }
@@ -795,11 +793,11 @@ fn setup_style(ctx: &egui::Context) {
     v.window_fill = col::PANEL;
     v.extreme_bg_color = col::DARKER;
     v.faint_bg_color = col::DARK;
-    v.window_stroke = Stroke::new(1.0, col::GRID_BAR);
+    v.window_stroke = Stroke::new(1.0_f32, col::GRID_BAR);
     v.window_corner_radius = egui::CornerRadius::same(4);
     v.selection.bg_fill = widgets::shade(col::ACCENT, 0.45);
-    v.selection.stroke = Stroke::new(1.0, col::ACCENT);
-    v.widgets.noninteractive.fg_stroke = Stroke::new(1.0, col::TEXT);
+    v.selection.stroke = Stroke::new(1.0_f32, col::ACCENT);
+    v.widgets.noninteractive.fg_stroke = Stroke::new(1.0_f32, col::TEXT);
     v.widgets.inactive.bg_fill = col::DARK;
     v.widgets.inactive.weak_bg_fill = col::DARK;
     v.widgets.hovered.weak_bg_fill = col::PANEL_HI;

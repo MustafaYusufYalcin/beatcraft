@@ -79,8 +79,6 @@ pub struct Voice {
     filt2: Svf,
     rng: Rng,
     pub done: bool,
-    pub gain_l: f32,
-    pub gain_r: f32,
 }
 
 impl Voice {
@@ -103,8 +101,6 @@ impl Voice {
             filt2: Svf::default(),
             rng: Rng::new(seed),
             done: false,
-            gain_l: 1.0,
-            gain_r: 1.0,
         }
     }
 
@@ -277,6 +273,7 @@ impl InsertFx {
     }
 
     /// Process in place. `delay_samples` is a dotted 1/8 at the current tempo.
+    #[allow(clippy::too_many_arguments)]
     pub fn process(&mut self, l: &mut [f32], r: &mut [f32], lowpass: f32, delay: f32, reverb: f32, delay_samples: usize, sr: f32) {
         let use_lp = lowpass < 0.999;
         let cut = 60.0 * 2f32.powf(lowpass * 8.5);
@@ -329,5 +326,84 @@ impl InsertFx {
             l[i] = a;
             r[i] = b;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const SR: f32 = 44100.0;
+
+    fn rms(x: &[f32]) -> f32 {
+        (x.iter().map(|v| v * v).sum::<f32>() / x.len() as f32).sqrt()
+    }
+
+    #[test]
+    fn every_instrument_sounds_and_finishes() {
+        for kind in InstKind::ALL {
+            let mut v = Voice::new(0, kind, kind.default_params(), 60, 0.0, 0.8, 0.2, false, 7);
+            let mut peak = 0.0f32;
+            let mut frames = 0;
+            while frames < SR as usize * 10 && !v.done {
+                let x = v.sample(SR);
+                assert!(x.is_finite(), "{kind:?} produced a non-finite sample");
+                peak = peak.max(x.abs());
+                frames += 1;
+            }
+            assert!(peak > 0.01, "{kind:?} peak {peak}");
+            assert!(v.done, "{kind:?} never finished");
+        }
+    }
+
+    #[test]
+    fn midi_pitch() {
+        assert!((midi_hz(69.0) - 440.0).abs() < 1e-3);
+        assert!((midi_hz(57.0) - 220.0).abs() < 1e-3);
+    }
+
+    #[test]
+    fn rng_is_deterministic_and_bounded() {
+        let (mut a, mut b) = (Rng::new(99), Rng::new(99));
+        for _ in 0..1000 {
+            let x = a.next();
+            assert_eq!(x, b.next());
+            assert!((-1.0..=1.0).contains(&x));
+        }
+        let mut z = Rng::new(0);
+        assert!((0..10).any(|_| z.next() != 0.0));
+    }
+
+    #[test]
+    fn delay_repeats_an_impulse_after_the_delay_time() {
+        let mut fx = InsertFx::new(SR);
+        let mut l = vec![0.0f32; 1500];
+        let mut r = vec![0.0f32; 1500];
+        l[0] = 1.0;
+        fx.process(&mut l, &mut r, 1.0, 1.0, 0.0, 1000, SR);
+        assert!((l[1000] - 1.0).abs() < 1e-6, "{}", l[1000]);
+        assert!(l[1..1000].iter().all(|v| *v == 0.0));
+        assert!(r.iter().all(|v| *v == 0.0));
+    }
+
+    #[test]
+    fn lowpass_reduces_noise_energy() {
+        let mut rng = Rng::new(5);
+        let mut l: Vec<f32> = (0..20000).map(|_| rng.next()).collect();
+        let mut r = l.clone();
+        let before = rms(&l);
+        InsertFx::new(SR).process(&mut l, &mut r, 0.2, 0.0, 0.0, 1000, SR);
+        assert!(rms(&l) < before * 0.5, "{} vs {before}", rms(&l));
+    }
+
+    #[test]
+    fn reverb_leaves_a_tail() {
+        let mut l = vec![0.0f32; 2205];
+        let mut r = vec![0.0f32; 2205];
+        l[0] = 1.0;
+        r[0] = 1.0;
+        InsertFx::new(SR).process(&mut l, &mut r, 1.0, 0.0, 0.5, 1000, SR);
+        assert!(l.iter().all(|v| v.is_finite()));
+        assert!(l[1500..].iter().any(|v| v.abs() > 1e-6));
     }
 }

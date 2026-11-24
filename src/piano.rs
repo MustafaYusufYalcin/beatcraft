@@ -93,7 +93,7 @@ impl App {
                 let row = Rect::from_min_size(pos2(grid.left(), y), vec2(grid.width(), KEY_H));
                 p.rect_filled(row, 0.0, if black { col::DARK } else { Color32::from_rgb(0x2f, 0x37, 0x3c) });
                 if k % 12 == 0 {
-                    p.line_segment([pos2(grid.left(), y + KEY_H), pos2(grid.right(), y + KEY_H)], Stroke::new(1.0, col::GRID_BAR));
+                    p.line_segment([pos2(grid.left(), y + KEY_H), pos2(grid.right(), y + KEY_H)], Stroke::new(1.0_f32, col::GRID_BAR));
                 }
                 // keyboard
                 let kr = Rect::from_min_size(pos2(rect.left(), y), vec2(KEYB_W - 2.0, KEY_H - 0.5));
@@ -113,7 +113,7 @@ impl App {
                 } else {
                     Color32::from_rgb(0x36, 0x3f, 0x45)
                 };
-                p.line_segment([pos2(x, grid.top()), pos2(x, grid.bottom())], Stroke::new(1.0, c));
+                p.line_segment([pos2(x, grid.top()), pos2(x, grid.bottom())], Stroke::new(1.0_f32, c));
             }
             // pattern end marker
             let pend = grid.left() + pat_end as f32 * tick_px;
@@ -142,7 +142,7 @@ impl App {
                 let r = note_rect(n);
                 let active = matches!(self.note_drag, Some(NoteDrag::Move { idx, .. }) | Some(NoteDrag::Resize { idx }) if idx == i);
                 p.rect_filled(r, 2.0, widgets::shade(ccol, 0.6 + 0.4 * n.vel));
-                p.rect_stroke(r, 2.0, Stroke::new(1.0, if active { Color32::WHITE } else { widgets::shade(ccol, 0.4) }), StrokeKind::Inside);
+                p.rect_stroke(r, 2.0, Stroke::new(1.0_f32, if active { Color32::WHITE } else { widgets::shade(ccol, 0.4) }), StrokeKind::Inside);
                 if r.width() > 26.0 {
                     p.text(r.left_center() + vec2(3.0, 0.0), Align2::LEFT_CENTER, key_name(n.key), FontId::proportional(8.5), col::DARKER);
                 }
@@ -150,7 +150,7 @@ impl App {
             // playhead
             if self.playing && !self.song_mode {
                 let x = grid.left() + (self.pos_ticks as f32 % self.project.patterns[pi].length_ticks() as f32) * tick_px;
-                p.line_segment([pos2(x, grid.top()), pos2(x, grid.bottom())], Stroke::new(1.5, col::ACCENT));
+                p.line_segment([pos2(x, grid.top()), pos2(x, grid.bottom())], Stroke::new(1.5_f32, col::ACCENT));
             }
             // interaction
             let hit = |notes: &[Note], pos: egui::Pos2| -> Option<(usize, bool)> {
@@ -245,7 +245,7 @@ impl App {
                 self.note_drag = None;
             }
         });
-        hscroll = out.state.offset.x + hscroll;
+        hscroll += out.state.offset.x;
         // velocity lane, aligned with the grid
         let (vr, vresp) = ui.allocate_exact_size(vec2(ui.available_width(), VEL_H), Sense::click_and_drag());
         let p = ui.painter();
@@ -256,7 +256,7 @@ impl App {
         for n in &self.project.patterns[pi].data[ci].notes {
             let x = gx + n.start as f32 * tick_px;
             let h = (VEL_H - 8.0) * n.vel;
-            clip.line_segment([pos2(x + 1.0, vr.bottom() - 2.0), pos2(x + 1.0, vr.bottom() - 2.0 - h)], Stroke::new(2.0, ccol));
+            clip.line_segment([pos2(x + 1.0, vr.bottom() - 2.0), pos2(x + 1.0, vr.bottom() - 2.0 - h)], Stroke::new(2.0_f32, ccol));
             clip.circle_filled(pos2(x + 1.0, vr.bottom() - 2.0 - h), 2.5, ccol);
         }
         if vresp.dragged() || vresp.clicked() {

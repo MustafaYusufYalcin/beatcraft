@@ -33,6 +33,7 @@ pub fn shade(c: Color32, f: f32) -> Color32 {
 }
 
 /// Rotary knob. Vertical drag changes value; double click resets. Returns true if changed.
+#[allow(clippy::too_many_arguments)]
 pub fn knob(ui: &mut Ui, value: &mut f32, min: f32, max: f32, default: f32, size: f32, color: Color32, tip: &str) -> bool {
     let (rect, resp) = ui.allocate_exact_size(vec2(size, size), Sense::click_and_drag());
     let mut changed = false;
@@ -57,7 +58,7 @@ pub fn knob(ui: &mut Ui, value: &mut f32, min: f32, max: f32, default: f32, size
     let c = rect.center();
     let r = size * 0.5 - 1.5;
     p.circle_filled(c, r, col::DARK);
-    p.circle_stroke(c, r, Stroke::new(1.0, col::GRID_BAR));
+    p.circle_stroke(c, r, Stroke::new(1.0_f32, col::GRID_BAR));
     let t = (*value - min) / (max - min);
     let a0 = std::f32::consts::PI * 0.75;
     let sweep = std::f32::consts::PI * 1.5;
@@ -73,10 +74,10 @@ pub fn knob(ui: &mut Ui, value: &mut f32, min: f32, max: f32, default: f32, size
         })
         .collect();
     if pts.len() > 1 {
-        p.add(egui::Shape::line(pts, Stroke::new(2.2, color)));
+        p.add(egui::Shape::line(pts, Stroke::new(2.2_f32, color)));
     }
     let a = a0 + sweep * t;
-    p.line_segment([c + vec2(a.cos(), a.sin()) * (r * 0.25), c + vec2(a.cos(), a.sin()) * (r - 2.5)], Stroke::new(1.6, col::TEXT));
+    p.line_segment([c + vec2(a.cos(), a.sin()) * (r * 0.25), c + vec2(a.cos(), a.sin()) * (r - 2.5)], Stroke::new(1.6_f32, col::TEXT));
     if !tip.is_empty() {
         resp.on_hover_text(format!("{tip}: {}", fmt_val(*value, min, max)));
     }
@@ -114,7 +115,7 @@ pub fn lcd(ui: &mut Ui, text: &str, width: f32, height: f32, size: f32) -> Respo
     let (rect, resp) = ui.allocate_exact_size(vec2(width, height), Sense::click_and_drag());
     let p = ui.painter();
     p.rect_filled(rect, 3.0, col::LCD);
-    p.rect_stroke(rect, 3.0, Stroke::new(1.0, col::DARKER), StrokeKind::Inside);
+    p.rect_stroke(rect, 3.0, Stroke::new(1.0_f32, col::DARKER), StrokeKind::Inside);
     p.text(rect.center(), Align2::CENTER_CENTER, text, FontId::monospace(size), col::LCD_TEXT);
     resp
 }
@@ -131,7 +132,7 @@ pub fn flat_button(ui: &mut Ui, text: &str, active: bool, w: f32, h: f32, active
         col::DARK
     };
     p.rect_filled(rect, 3.0, bg);
-    p.rect_stroke(rect, 3.0, Stroke::new(1.0, if active { active_color } else { col::GRID }), StrokeKind::Inside);
+    p.rect_stroke(rect, 3.0, Stroke::new(1.0_f32, if active { active_color } else { col::GRID }), StrokeKind::Inside);
     p.text(rect.center(), Align2::CENTER_CENTER, text, FontId::proportional(12.0), if active { Color32::WHITE } else { col::TEXT });
     resp
 }
@@ -155,11 +156,11 @@ pub fn fader(ui: &mut Ui, value: &mut f32, default: f32, rect: Rect) -> bool {
     // unity mark
     let y_of = |v: f32| track.bottom() - v * track.height();
     let uy = y_of(default);
-    p.line_segment([pos2(rect.left() + 2.0, uy), pos2(rect.right() - 2.0, uy)], Stroke::new(1.0, col::DIM));
+    p.line_segment([pos2(rect.left() + 2.0, uy), pos2(rect.right() - 2.0, uy)], Stroke::new(1.0_f32, col::DIM));
     let y = y_of(*value);
     let cap = Rect::from_center_size(pos2(rect.center().x, y), vec2(rect.width() - 4.0, 11.0));
     p.rect_filled(cap, 2.0, Color32::from_rgb(0x9a, 0xa6, 0xac));
-    p.line_segment([pos2(cap.left() + 2.0, y), pos2(cap.right() - 2.0, y)], Stroke::new(1.0, col::DARKER));
+    p.line_segment([pos2(cap.left() + 2.0, y), pos2(cap.right() - 2.0, y)], Stroke::new(1.0_f32, col::DARKER));
     resp.on_hover_text(format!("{:.1} dB", crate::model::fader_db(*value)));
     changed
 }

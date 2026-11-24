@@ -1,6 +1,7 @@
 //! BeatCraft app icon, drawn in code so every platform package can use it.
 
 /// RGBA pixels of a square icon.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn pixels(size: u32) -> Vec<u8> {
     let s = size as f32;
     let mut out = vec![0u8; (size * size * 4) as usize];
@@ -60,10 +61,12 @@ pub fn pixels(size: u32) -> Vec<u8> {
     out
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn icon_data() -> egui::IconData {
     egui::IconData { rgba: pixels(256), width: 256, height: 256 }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn write_png(path: &std::path::Path, size: u32) -> Result<(), String> {
     image::save_buffer(path, &pixels(size), size, size, image::ColorType::Rgba8).map_err(|e| e.to_string())
 }
