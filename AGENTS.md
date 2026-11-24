@@ -12,3 +12,10 @@
   the command count is asserted in `tests/cli.rs` and stated in `README.md`.
 - Every sound, icon and demo song is generated in code. Do not add third-party samples, presets or artwork,
   and do not name other companies' products in user-facing text.
+- CI uses the newest stable Rust, which can be newer than the local toolchain: a clippy lint may fail there
+  that passes here. Run `rustup update` before trusting a local clippy run, and watch the CI run after a push.
+- Releasing: push a `v*` tag; `release.yml` builds, checks and attaches the packages and `SHA256SUMS.txt`.
+  The web build deploys from `main` only (`pages.yml`). Asset names follow the ArtCraft Launcher's
+  `beatcraft-<version>-<os>-<arch>[-portable].<ext>`; see `PACKAGING.md` before renaming anything.
+- Design numbers are our own or come from public documentation. Never take values, text or assets from
+  another program's files. Record the source of any new shared convention in `docs/PROVENANCE.md`.
