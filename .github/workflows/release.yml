@@ -37,19 +37,64 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config libasound2-dev libx11-dev libxcursor-dev libxrandr-dev \
             libxi-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev
+          sudo apt-get install -y file desktop-file-utils
 
       - name: Package (Windows)
         if: matrix.name == 'windows'
         shell: pwsh
         run: ./packaging/package-windows.ps1
 
+      - name: Check the Windows package
+        if: matrix.name == 'windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = (Select-String -Path Cargo.toml -Pattern '^version = "(.+)"' | Select-Object -First 1).Matches[0].Groups[1].Value
+          $tmp = Join-Path $env:RUNNER_TEMP "beatcraft-check"
+          Expand-Archive -Path "dist\beatcraft-$version-windows-x64-portable.zip" -DestinationPath $tmp -Force
+          foreach ($f in "BeatCraft.exe", "beatcraft-cli.exe") {
+            if (-not (Test-Path (Join-Path $tmp $f))) { throw "$f is missing from the zip root" }
+          }
+          & (Join-Path $tmp "beatcraft-cli.exe") list | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "beatcraft-cli.exe list failed" }
+          $pv = (Get-Item (Join-Path $tmp "BeatCraft.exe")).VersionInfo.ProductVersion
+          if ($pv -ne $version) { throw "ProductVersion $pv does not match $version" }
+
       - name: Package (macOS, Apple Silicon + Intel)
         if: matrix.name == 'macos'
         run: bash packaging/package-macos.sh --universal
 
+      - name: Check the macOS package
+        if: matrix.name == 'macos'
+        run: |
+          set -euo pipefail
+          VERSION="$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)"
+          test -f "dist/beatcraft-$VERSION-macos-universal.dmg"
+          ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' dist/BeatCraft.app/Contents/Info.plist)"
+          test "$ID" = "io.github.mustafayusufyalcin.beatcraft"
+
       - name: Package (Linux)
         if: matrix.name == 'linux'
         run: bash packaging/package-linux.sh
+
+      - name: Check the Linux packages
+        if: matrix.name == 'linux'
+        run: |
+          set -euo pipefail
+          APP_ID=io.github.mustafayusufyalcin.beatcraft
+          T="$(mktemp -d)"
+          tar -xzf dist/beatcraft-*-linux-*.tar.gz -C "$T"
+          for f in "$T"/*/bin/beatcraft "$T"/*/bin/beatcraft-cli; do
+            test -f "$f" && test -x "$f"
+          done
+          "$T"/*/bin/beatcraft-cli list > /dev/null
+          X="$(mktemp -d)"
+          cp dist/beatcraft-*-linux-*.AppImage "$X/app.AppImage"
+          (cd "$X" && ./app.AppImage --appimage-extract > /dev/null)
+          test -f "$X/squashfs-root/AppRun"
+          test -f "$X/squashfs-root/usr/bin/beatcraft"
+          test -f "$X/squashfs-root/$APP_ID.desktop"
+          desktop-file-validate "$X/squashfs-root/$APP_ID.desktop"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -58,6 +103,7 @@ jobs:
             dist/*.zip
             dist/*.dmg
             dist/*.tar.gz
+            dist/*.AppImage
             dist/SHA256SUMS-*.txt
 
       - name: Attach to release
@@ -68,6 +114,7 @@ jobs:
             dist/*.zip
             dist/*.dmg
             dist/*.tar.gz
+            dist/*.AppImage
             dist/SHA256SUMS-*.txt
 
   checksums:

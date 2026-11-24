@@ -1,7 +1,7 @@
-BeatCraft 0.1 - pattern-based beat making
+BeatCraft - pattern-based beat making
 
 Start: double-click BeatCraft (BeatCraft.exe on Windows, BeatCraft.app on Mac,
-or run ./install.sh then pick BeatCraft from the app menu on Linux).
+or on Linux run the .AppImage, or ./install.sh from the tar.gz and pick BeatCraft from the app menu).
 
 Keys
   Space            play / pause

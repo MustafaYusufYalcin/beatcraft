@@ -1,11 +1,11 @@
-# Builds BeatCraft.exe and packs it as dist\BeatCraft-<version>-windows-x64.zip
+# Builds BeatCraft.exe and packs it as dist\beatcraft-<version>-windows-x64-portable.zip (flat zip)
 # Needs Rust (https://rustup.rs) with the default MSVC toolchain.
 $ErrorActionPreference = "Stop"
 Set-Location (Join-Path $PSScriptRoot "..")
 
 $name = "BeatCraft"
 $version = (Select-String -Path Cargo.toml -Pattern '^version = "(.+)"' | Select-Object -First 1).Matches[0].Groups[1].Value
-$out = "dist\$name-$version-windows-x64"
+$out = "dist\beatcraft-$version-windows-x64-portable"
 
 cargo build --release
 if ($LASTEXITCODE -ne 0) { throw "cargo build failed" }

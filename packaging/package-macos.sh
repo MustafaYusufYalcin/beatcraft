@@ -51,7 +51,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <dict>
   <key>CFBundleName</key><string>$NAME</string>
   <key>CFBundleDisplayName</key><string>$NAME</string>
-  <key>CFBundleIdentifier</key><string>io.beatcraft.app</string>
+  <key>CFBundleIdentifier</key><string>io.github.mustafayusufyalcin.beatcraft</string>
   <key>CFBundleVersion</key><string>$VERSION</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleExecutable</key><string>$NAME</string>
@@ -67,8 +67,8 @@ PLIST
 # Ad-hoc signature so macOS runs it locally (not notarised).
 codesign --force --deep --sign - "$APP"
 
-ZIP="$DIST/$NAME-$VERSION-macos-$ARCH.zip"
-DMG="$DIST/$NAME-$VERSION-macos-$ARCH.dmg"
+ZIP="$DIST/beatcraft-$VERSION-macos-$ARCH.zip"
+DMG="$DIST/beatcraft-$VERSION-macos-$ARCH.dmg"
 rm -f "$ZIP" "$DMG"
 ditto -c -k --keepParent "$APP" "$ZIP"
 STAGE="$DIST/.dmg-stage"
