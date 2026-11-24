@@ -22,6 +22,7 @@ Linux needs the ALSA and windowing headers listed in the README. For the browser
 | `src/engine.rs` | Audio rendering, the mixer, WAV export |
 | `src/commands.rs` | Every command the CLI and MCP server can run |
 | `src/bin/beatcraft-cli.rs` | The CLI and the MCP server |
+| `tests/cli.rs` and the `#[cfg(test)]` modules at the bottom of `model.rs`, `synth.rs`, `engine.rs` and `commands.rs` | The tests (`cargo test`) |
 | `src/app.rs`, `rack.rs`, `piano.rs`, `playlist.rs`, `mixer.rs`, `widgets.rs` | The user interface |
 
 ## Good first steps
@@ -31,11 +32,12 @@ Linux needs the ALSA and windowing headers listed in the README. For the browser
 - **A new effect:** add a variant to `FxKind` in `src/model.rs`, its processing in `src/synth.rs`,
   and its name in `mixer.load_fx` (`src/commands.rs`).
 - **A new command:** add a `CommandSpec` and a match arm in `src/commands.rs`; the CLI and MCP pick it up.
+  It needs a test in `src/commands.rs` and a section in `docs/wiki/Command-Reference.md`.
 - Issues labelled **good first issue** are picked to be small and self-contained.
 
 ## Before you open a pull request
 
-- `cargo fmt` and `cargo clippy` are clean, and `cargo build` works.
+- `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` and `cargo test` pass (CI runs the same checks).
 - If you changed sound, render something with `beatcraft-cli render` (or `examples/trap-beat.sh`)
   and listen to it.
 - If you changed the UI, add a screenshot (`BeatCraft --screenshot shot.png` writes one).

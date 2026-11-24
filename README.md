@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  By Mustafa Yusuf Yalçın and &lt;ARKADAŞ ADI SOYADI&gt; · a community app in the Craft ecosystem
+  By Mustafa Yusuf Yalçın and Yusuf Arslan · an independent community app that follows the Craft app conventions
 </p>
 
 > [!NOTE]
@@ -28,6 +28,7 @@
   <a href="#what-works-today">What works</a> ·
   <a href="#getting-started">Getting started</a> ·
   <a href="#agents-cli-and-mcp">Agents, CLI and MCP</a> ·
+  <a href="docs/wiki/Home.md">Docs</a> ·
   <a href="#roadmap">Roadmap</a> ·
   <a href="#contributing">Contributing</a> ·
   <a href="#downloads">Downloads</a> ·
@@ -46,7 +47,7 @@
 BeatCraft is **early alpha**. Today it can:
 
 - **Sequence:** a channel rack with 16, 32 or 64 steps per pattern, per-step velocity, swing in
-  1/128 steps, mute, volume and pan per channel.
+  whole-percent steps, mute, volume and pan per channel.
 - **Write melodies:** a piano roll with drawing, moving, resizing and deleting notes, a velocity
   lane, ghost notes from other channels and quantize.
 - **Arrange:** a playlist with pattern clips you place, move, stretch and delete; pattern and song mode.
@@ -100,6 +101,22 @@ beatcraft-cli render beat.json beat.wav
 `execute`, `batch`, `inspect_project`, `open_project`, `save_project` and `export_wav`.
 Claude Code: `claude mcp add beatcraft -- beatcraft-cli mcp`, then ask for a beat.
 [examples/trap-beat.sh](examples/trap-beat.sh) shows a whole beat built from these commands.
+The [command reference](docs/wiki/Command-Reference.md) describes every command, and
+[MCP setup](docs/wiki/MCP-Setup.md) shows how to connect an AI assistant.
+
+## Documentation
+
+The wiki lives in [docs/wiki](docs/wiki/Home.md):
+[Getting started](docs/wiki/Getting-Started.md),
+[Your first beat](docs/wiki/Your-First-Beat.md),
+[Command reference](docs/wiki/Command-Reference.md),
+[MCP setup](docs/wiki/MCP-Setup.md),
+[Project file format](docs/wiki/Project-File-Format.md),
+[Architecture](docs/wiki/Architecture.md),
+[Sound engine](docs/wiki/Sound-Engine.md),
+[Testing](docs/wiki/Testing.md),
+[Releasing](docs/wiki/Releasing.md) and
+[FAQ](docs/wiki/FAQ.md).
 
 ## Roadmap
 
@@ -116,15 +133,19 @@ effects, themes, translations and docs are all open. Start with an issue labelle
 
 ## Downloads
 
-Builds for macOS, Windows and Linux are attached to each
-[GitHub release](https://github.com/MustafaYusufYalcin/beatcraft/releases), with a `SHA256SUMS.txt` to check them against.
+Builds are attached to each [GitHub release](https://github.com/MustafaYusufYalcin/beatcraft/releases),
+with a `SHA256SUMS.txt` to check them against: a `.dmg` for macOS (`beatcraft-<version>-macos-universal.dmg`),
+a portable `.zip` for Windows (`beatcraft-<version>-windows-x64-portable.zip`), and an `.AppImage` or a `.tar.gz`
+with an `install.sh` for Linux. `beatcraft-cli` has its own zip on macOS and is inside the Windows and Linux packages.
 See [PACKAGING.md](PACKAGING.md) to build them yourself. macOS builds are not notarised yet
 (right-click → Open the first time); Windows builds are unsigned (SmartScreen → More info → Run anyway).
 
 ## License
 
 BeatCraft is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
-Copyright (c) 2026 Mustafa Yusuf Yalçın, &lt;ARKADAŞ ADI SOYADI&gt; and the BeatCraft contributors.
+Copyright (c) 2026 Mustafa Yusuf Yalçın, Yusuf Arslan and the BeatCraft contributors.
 Required notices are in [NOTICE](NOTICE). The app icon is drawn in code and every sound is
 synthesised by BeatCraft itself; see [ATTRIBUTION.md](ATTRIBUTION.md). Maintainers are listed in
 [MAINTAINERS.md](MAINTAINERS.md).
+Where the design numbers come from, and what changed in 0.2.0, is in
+[docs/PROVENANCE.md](docs/PROVENANCE.md).
